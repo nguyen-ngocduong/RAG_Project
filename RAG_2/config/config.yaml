@@ -1,0 +1,5 @@
+data_paths:
+    raw_dir: "./data/raw"
+    processed_dir: "./data/processed"
+vector_db:
+    local_path: "./data/processed/chroma_db"  # Nếu dùng Vector DB dạng file như ChromaDB/FAISS (test chua su dung)

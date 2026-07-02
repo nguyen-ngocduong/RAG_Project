@@ -1,7 +1,9 @@
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from src.clean_vietnamese_text import text_processing
 from config.Config import CHUNK_SIZE, CHUNK_OVERLAP
 from src.loader import load_pdf
 import logging
+import pickle
 
 def splitter(separators):
     return RecursiveCharacterTextSplitter(
@@ -25,15 +27,41 @@ def chunk_recursive(docs):
     chunks = text_splitter.split_text(docs)
     return chunks
 
-# if __name__ == "__main__":
-#     logging.basicConfig(
-#         filename = "logs/app.log",
-#         level=logging.INFO,
-#         format = "%(asctime)s - %(levelname)s - %(message)s"
-#         )
-#     logging.info("="*20 + "Logging file recursive.py" + "="*20)
-#     pdf_path = ["data/raw/AIO2205_Grafana-Prometheus-Monitoring.pdf", "data/raw/M6W1D5_Evaluation_Metrics.pdf"]
-#     all_docs = [load_pdf(path) for path in pdf_path]
-#     chunks = [chunk_recursive(doc) for docs in all_docs for doc in docs]
-#     print(len(chunks))
-#     logging.info(chunks[0:5])
+if __name__ == "__main__":
+
+    processed_path = "data/processed/recursive_chunk.pkl"
+    logging.basicConfig(
+        filename = "logs/app.log",
+        level=logging.INFO,
+        format = "%(asctime)s - %(levelname)s - %(message)s"
+        )
+    logging.info("="*20 + "Logging file recursive.py" + "="*20)
+    pdf_path = ["data/raw/AIO2205_Grafana-Prometheus-Monitoring.pdf", "data/raw/M6W1D5_Evaluation_Metrics.pdf"]
+    all_docs = [load_pdf(path) for path in pdf_path]
+    processed_text = []
+    for i in range(len(all_docs)):
+        if i == 0:
+            docs = [page for j, page in enumerate(all_docs[i]) if j != 2]
+        else: docs = all_docs[i]
+        text = "\n\n".join(docs)
+        processed_text.append(text_processing(text))
+    chunks = []
+    for text in processed_text:
+        chunks_recursive = chunk_recursive(text)
+        chunks.append(chunks_recursive)
+    # print(len(chunks))
+    # print(len(chunks[0]))
+    # logging.info(chunks[0])
+    fixed_chunk = []
+    for i in range(len(pdf_path)):
+        fixed_chunk.append(
+            {
+                "document_id": i,
+                "source": pdf_path[i],
+                "chunk_size": CHUNK_SIZE,
+                "chunk_overlap": CHUNK_OVERLAP,
+                "chunks": chunks[i]
+            }
+        )
+    with open(processed_path, "wb") as file:
+        pickle.dump(fixed_chunk, file)

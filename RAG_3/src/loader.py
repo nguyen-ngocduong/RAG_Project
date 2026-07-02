@@ -1,14 +1,13 @@
-from langchain_community.document_loaders import DirectoryLoader, UnstructuredFileLoader
+import pymupdf
 
-def load_document(directory_path: str):
+def load_pdf(pdf_path):
     """
-    Load documents from a directory using UnstructuredFileLoader.
+    -Load theo tung trang cua pdf
     """
-    loader = DirectoryLoader(
-        directory_path, 
-        glob="**/*.pdf", 
-        loader_cls=UnstructuredFileLoader,
-        show_progress=True,
-        use_multithreading=True)
-    documents = loader.load()
-    return documents
+    doc = pymupdf.open(pdf_path)
+    pages = []
+    for page in doc:
+        pages.append(
+            page.get_text()
+        )
+    return pages

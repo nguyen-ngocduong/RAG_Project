@@ -3,7 +3,6 @@ import pickle
 
 def load_embedding_model(model_name):
   model = SentenceTransformer(model_name)
-  #model.max_seq_length = 256
   return model
 
 def embedding_chunk(embedding_model, chunks):

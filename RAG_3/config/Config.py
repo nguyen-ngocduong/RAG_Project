@@ -37,3 +37,8 @@ MAX_TOKENS = config["generation"]["max_tokens"]
 # ==========================
 HF_TOKEN = config["key"]["HF_TOKEN"]
 GEMINI_KEY = config["key"]["GEMINI_KEY"]
+
+# ==========================
+# MODEL
+# ==========================
+MODEL_NAME = config["model"]["MODEL_NAME"]

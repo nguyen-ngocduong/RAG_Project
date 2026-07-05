@@ -1,2 +1,6 @@
 .env
 logs
+.agents
+skills-lock.json
+/.cocoindex_code/
+/.gemini

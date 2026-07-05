@@ -1,7 +1,6 @@
 from src.loader import load_pdf
 import re
 import unicodedata
-import logging
 from config.Config import CHUNK_SIZE, CHUNK_OVERLAP
 
 def text_processing(text: str) -> str:

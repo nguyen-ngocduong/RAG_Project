@@ -35,16 +35,16 @@ def retrieval(query, embedding_model,records, top_k = TOP_K):
         })
     return results
 
-# if __name__ == "__main__":
-#     logging.basicConfig(
-#         filename = "logs/app.log",
-#         level=logging.INFO,
-#         format="%(asctime)s - %(levelname)s - %(message)s"
-#     )
-#     logging.info("="*20 + "Logging retrieval.py" + "="*20)
-#     query = "Server phân bổ tài nguyên như thế nào"
-#     vector_store = "data/vector_store/embedding.pkl"
-#     embedding_model = load_embedding_model(MODEL_NAME)
-#     with open(vector_store, "rb") as file:
-#         records = pickle.load(file)
-#     logging.info(retrieval(query, embedding_model, records))
+if __name__ == "__main__":
+    logging.basicConfig(
+        filename = "logs/app.log",
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s"
+    )
+    logging.info("="*20 + "Logging retrieval.py" + "="*20)
+    query = "hay neu hien tuong deadlock"
+    vector_store = "data/vector_store/embedding.pkl"
+    embedding_model = load_embedding_model(MODEL_NAME)
+    with open(vector_store, "rb") as file:
+        records = pickle.load(file)
+    logging.info(retrieval(query, embedding_model, records))

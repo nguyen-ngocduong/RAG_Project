@@ -10,4 +10,11 @@ key:
   HF_TOKEN: ${HF_TOKEN}
   GEMINI_KEY: ${GEMINI_KEY}
 model:
-  MODEL_NAME: BAAI/bge-m3
+  MODEL_NAME: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+vectorstore:
+  # Lựa chọn giữa 'chroma' hoặc 'qdrant' để test từng VectorDB
+  db_type: qdrant
+  # Thư mục lưu trữ database
+  persist_directory: data/vector_store
+  collection_name: rag_collection
+  vector_size: 384 # Kích thước vector của sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2

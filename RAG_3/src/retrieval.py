@@ -1,38 +1,26 @@
 import numpy as np
-import pickle
 import logging
-from src.similarity import cosine_similarity
-from config.Config import TOP_K, MODEL_NAME
+from config.Config import TOP_K, MODEL_NAME, VECTOR_DB_TYPE, VECTOR_DB_PERSIST_DIR, VECTOR_DB_COLLECTION, VECTOR_DB_SIZE
 from src.embedding import load_embedding_model
+from src.vectorstore.chroma_store import ChromaStore
+from src.vectorstore.qdrant_store import QdrantStore
 
-def retrieval(query, embedding_model,records, top_k = TOP_K):
+def retrieval(query, embedding_model, top_k = TOP_K):
     """
     - query: user question
     - embedding_model: Vietnamese embedding model.
-    - records: embedding.pkl
     - top_k: TOP_K (config)
     """
     query_embedding = embedding_model.encode(query)
-    corpus = []
-    metadata = []
+    
+    if VECTOR_DB_TYPE.lower() == "chroma":
+        db = ChromaStore(persist_directory=VECTOR_DB_PERSIST_DIR, collection_name=VECTOR_DB_COLLECTION)
+    elif VECTOR_DB_TYPE.lower() == "qdrant":
+        db = QdrantStore(persist_directory=VECTOR_DB_PERSIST_DIR, collection_name=VECTOR_DB_COLLECTION, vector_size=VECTOR_DB_SIZE)
+    else:
+        raise ValueError(f"Loại VectorDB không được hỗ trợ: {VECTOR_DB_TYPE}")
 
-    for record in records:
-
-        for chunk_idx, embedding in enumerate(record["embeddings"]):
-            corpus.append(embedding) #embedding cua records[i]
-            metadata.append({
-                "source": record["source"],
-                "chunk": record["chunks"][chunk_idx]
-            })
-    scores = [cosine_similarity(query_embedding, cor) for cor in corpus]
-    top_indices = np.argsort(scores)[::-1][:top_k]
-    results = []
-    for i in top_indices:
-        results.append({
-            "chunk": metadata[i]["chunk"],
-            "score": scores[i],
-            "source": metadata[i]["source"]
-        })
+    results = db.search(query_embedding=query_embedding, top_k=top_k)
     return results
 
 if __name__ == "__main__":
@@ -43,8 +31,7 @@ if __name__ == "__main__":
     )
     logging.info("="*20 + "Logging retrieval.py" + "="*20)
     query = "hay neu hien tuong deadlock"
-    vector_store = "data/vector_store/embedding.pkl"
     embedding_model = load_embedding_model(MODEL_NAME)
-    with open(vector_store, "rb") as file:
-        records = pickle.load(file)
-    logging.info(retrieval(query, embedding_model, records))
+    
+    results = retrieval(query, embedding_model)
+    logging.info(results)

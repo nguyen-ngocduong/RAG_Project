@@ -79,14 +79,7 @@ st.markdown("""
 def get_embedding_model():
     return load_embedding_model(MODEL_NAME)
 
-@st.cache_resource(show_spinner="Đang tải dữ liệu vector store (Semantic Chunks)...")
-def get_vector_store():
-    # Loading semantic chunking database
-    vector_store_path = os.path.join(parent_dir, "data/vector_store/embedding_semantic.pkl")
-    if not os.path.exists(vector_store_path):
-        raise FileNotFoundError(f"Không tìm thấy file vector store tại: {vector_store_path}")
-    with open(vector_store_path, "rb") as f:
-        return pickle.load(f)
+# Removed get_vector_store as we now use Vector DB
 
 # Initialize Session State
 if "messages" not in st.session_state:
@@ -120,8 +113,7 @@ with st.sidebar:
                     
                     from src.ingestion import process_and_add_document
                     model = get_embedding_model()
-                    vector_store_path = os.path.join(parent_dir, "data/vector_store/embedding_semantic.pkl")
-                    num_chunks = process_and_add_document(file_path, vector_store_path, model)
+                    num_chunks = process_and_add_document(file_path, model)
                     
                     st.cache_resource.clear()
                     st.success(f"Nạp thành công! Tạo ra {num_chunks} chunks.")
@@ -135,10 +127,9 @@ with st.sidebar:
     st.markdown("### 📊 Trạng thái kết nối")
     try:
         embedding_model = get_embedding_model()
-        records = get_vector_store()
+        from config.Config import VECTOR_DB_TYPE
         st.markdown("🔹 Model Embedding: <span class='status-ok'>Đã tải</span>", unsafe_allow_html=True)
-        st.markdown("🔹 Vector Store: <span class='status-ok'>Đã tải</span>", unsafe_allow_html=True)
-        st.markdown(f"🔹 Tổng số chunks: **{len(records)}**")
+        st.markdown(f"🔹 Vector Store ({VECTOR_DB_TYPE.upper()}): <span class='status-ok'>Đã kết nối</span>", unsafe_allow_html=True)
     except Exception as e:
         st.error(f"Lỗi khởi tạo tài nguyên: {str(e)}")
         
@@ -177,10 +168,8 @@ if prompt_input := st.chat_input("Hỏi tôi về tài liệu của bạn..."):
             try:
                 # Load assets cached
                 model = get_embedding_model()
-                data_records = get_vector_store()
-                
                 # Get RAG response
-                response = rag_pipeline(prompt_input, data_records, model)
+                response = rag_pipeline(prompt_input, model)
                 
                 message_placeholder.markdown(response)
                 # Add assistant response to chat history

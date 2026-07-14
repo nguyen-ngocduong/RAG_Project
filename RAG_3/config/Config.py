@@ -42,3 +42,12 @@ GEMINI_KEY = config["key"]["GEMINI_KEY"]
 # MODEL
 # ==========================
 MODEL_NAME = config["model"]["MODEL_NAME"]
+
+# ==========================
+# VECTOR STORE
+# ==========================
+VECTOR_DB_TYPE = config.get("vectorstore", {}).get("db_type", "chroma")
+persist_dir = config.get("vectorstore", {}).get("persist_directory", "data/vector_store")
+VECTOR_DB_PERSIST_DIR = str(Path(__file__).parent.parent / persist_dir)
+VECTOR_DB_COLLECTION = config.get("vectorstore", {}).get("collection_name", "rag_collection")
+VECTOR_DB_SIZE = config.get("vectorstore", {}).get("vector_size", 1024)

@@ -16,3 +16,4 @@ rank_bm25
 nltk
 numpy
 fitz
+qdrant-client 

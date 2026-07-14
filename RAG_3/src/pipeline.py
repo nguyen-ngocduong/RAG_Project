@@ -3,14 +3,12 @@ from src.generation.generation import generate_answer
 from src.generation.prompt import prompt
 from config.Config import TOP_K, MODEL_NAME
 from src.embedding import load_embedding_model
-import  pickle
 import logging
 
-def rag_pipeline(query, records, embedding_model):
+def rag_pipeline(query, embedding_model):
     retrieved_docs = retrieval(
         query=query,
         embedding_model=embedding_model,
-        records=records,
         top_k=TOP_K
     )
     # Gộp các chunk kết quả tìm kiếm được thành 1 context duy nhất 
@@ -35,8 +33,5 @@ def rag_pipeline(query, records, embedding_model):
 #     )
 #     logging.info("="*20 + "Logging pipeline.py" + "="*20)
 #     query = "Server phân bổ tài nguyên như thế nào"
-#     vector_store = "data/vector_store/embedding.pkl"
 #     embedding_model = load_embedding_model(MODEL_NAME)
-#     with open(vector_store, "rb") as file:
-#         records = pickle.load(file)
-#     logging.info(rag_pipeline(query, records, embedding_model))
+#     logging.info(rag_pipeline(query, embedding_model))

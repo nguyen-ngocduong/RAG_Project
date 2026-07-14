@@ -3,9 +3,11 @@ import pickle
 from src.loader import load_document
 from src.clean_vietnamese_text import text_processing
 from src.chunker.sematic import chunk_semantic
-from config.Config import CHUNK_SIZE
+from config.Config import CHUNK_SIZE, VECTOR_DB_TYPE, VECTOR_DB_PERSIST_DIR, VECTOR_DB_COLLECTION, VECTOR_DB_SIZE
+from src.vectorstore.chroma_store import ChromaStore
+from src.vectorstore.qdrant_store import QdrantStore
 
-def process_and_add_document(file_path, vector_store_path, embedding_model):
+def process_and_add_document(file_path, embedding_model):
     """
     Quy quy trinh tu dong hoa nạp tai lieu (.pdf, .docx):
     Doc file -> Lam sach -> Semantic Chunking -> Embedding -> Cap nhat/Gop vao database.
@@ -27,30 +29,25 @@ def process_and_add_document(file_path, vector_store_path, embedding_model):
     doc_id = int(os.path.getmtime(file_path)) # dung timestamp lam ID doc nhat
     embeddings = embedding_model.encode(chunks, show_progress_bar=False)
     
-    new_embedded_record = {
-        "document_id": doc_id,
-        "source": os.path.basename(file_path),
-        "chunk_size": CHUNK_SIZE,
-        "chunks": chunks,
-        "embeddings": embeddings
-    }
+    # 5. Khởi tạo VectorStore dựa trên Config
+    if VECTOR_DB_TYPE.lower() == "chroma":
+        db = ChromaStore(persist_directory=VECTOR_DB_PERSIST_DIR, collection_name=VECTOR_DB_COLLECTION)
+    elif VECTOR_DB_TYPE.lower() == "qdrant":
+        db = QdrantStore(persist_directory=VECTOR_DB_PERSIST_DIR, collection_name=VECTOR_DB_COLLECTION, vector_size=VECTOR_DB_SIZE)
+    else:
+        raise ValueError(f"Loại VectorDB không được hỗ trợ: {VECTOR_DB_TYPE}")
+
+    # Tạo metadata cho từng chunk
+    metadata = [
+        {
+            "document_id": doc_id,
+            "source": os.path.basename(file_path),
+            "chunk_size": CHUNK_SIZE,
+        }
+        for _ in chunks
+    ]
     
-    # 5. Gop vao co so du lieu vector store da co
-    existing_records = []
-    if os.path.exists(vector_store_path):
-        try:
-            with open(vector_store_path, "rb") as f:
-                existing_records = pickle.load(f)
-                if not isinstance(existing_records, list):
-                    existing_records = [existing_records]
-        except Exception as e:
-            # Truong hop loi khi doc thi xem nhu bat dau moi
-            existing_records = []
-            
-    # Them record moi vao va ghi de file vector store
-    existing_records.append(new_embedded_record)
-    
-    with open(vector_store_path, "wb") as f:
-        pickle.dump(existing_records, f)
+    # 6. Thêm vào vector database
+    db.add_documents(chunks=chunks, embeddings=embeddings, metadata=metadata)
         
     return len(chunks)

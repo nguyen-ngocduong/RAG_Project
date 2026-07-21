@@ -50,14 +50,16 @@ def text_processing(text: str) -> str:
     # 5. Remove Table of Contents
     # ============================================================
     toc_pattern = (
-        r"Mục lục.*?(?=\n(?:Bảng Giải Thích Thuật Ngữ|I\.\s*Bối cảnh|II\.))"
+        r"^\s*Mục\s*lục\s*"
+        r".*?"
+        r"(?=\n\s*Bối cảnh\b)"
     )
 
     text = re.sub(
         toc_pattern,
         "",
         text,
-        flags=re.DOTALL | re.IGNORECASE,
+        flags=re.IGNORECASE | re.DOTALL | re.MULTILINE,
     )
 
     # ============================================================

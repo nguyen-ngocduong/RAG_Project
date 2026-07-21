@@ -55,15 +55,16 @@ class QdrantStore:
         vector = query_embedding.tolist() if isinstance(query_embedding, np.ndarray) else query_embedding
         if hasattr(vector, 'numpy'):
             vector = vector.numpy().tolist()
-            
-        search_result = self.client.search(
+
+        # qdrant-client >= 1.12.0: dùng query_points thay vì search
+        search_result = self.client.query_points(
             collection_name=self.collection_name,
-            query_vector=vector,
+            query=vector,
             limit=top_k
         )
-        
+
         formatted_results = []
-        for result in search_result:
+        for result in search_result.points:
             formatted_results.append({
                 "chunk": result.payload.get("chunk", ""),
                 "score": result.score,

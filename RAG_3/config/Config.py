@@ -20,6 +20,9 @@ config["key"]["GEMINI_KEY"] = os.getenv("GEMINI_KEY")
 # ==========================
 CHUNK_SIZE = config["chunking"]["chunk_size"]
 CHUNK_OVERLAP = config["chunking"]["chunk_overlap"]
+MAX_CHUNK_SIZE = config["chunking"]["max_chunk_size"]
+MIN_CHUNK_SIZE = config["chunking"]["min_chunk_size"]
+THRESHOLD = config["chunking"]["threshold"]
 
 # ==========================
 # Retrieval

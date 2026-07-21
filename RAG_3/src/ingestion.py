@@ -1,33 +1,36 @@
 import os
-import pickle
-from src.loader import load_document
-from src.clean_vietnamese_text import text_processing
-from src.chunker.sematic import chunk_semantic
-from config.Config import CHUNK_SIZE, VECTOR_DB_TYPE, VECTOR_DB_PERSIST_DIR, VECTOR_DB_COLLECTION, VECTOR_DB_SIZE
+from config.Config import (
+    MAX_CHUNK_SIZE, VECTOR_DB_TYPE, VECTOR_DB_PERSIST_DIR, 
+    VECTOR_DB_COLLECTION, VECTOR_DB_SIZE, MIN_CHUNK_SIZE, MODEL_NAME
+)
 from src.vectorstore.chroma_store import ChromaStore
 from src.vectorstore.qdrant_store import QdrantStore
+from src.chunker.sematic import SemanticChunk
+
 
 def process_and_add_document(file_path, embedding_model):
     """
     Quy quy trinh tu dong hoa nạp tai lieu (.pdf, .docx):
     Doc file -> Lam sach -> Semantic Chunking -> Embedding -> Cap nhat/Gop vao database.
     """
-    # 1. Doc du lieu tu file (tu dong nhan dien .pdf hoac .docx)
-    raw_blocks = load_document(file_path)
-    full_text = "\n\n".join(raw_blocks)
-    
-    # 2. Tien xu ly / lam sach van ban
-    cleaned_text = text_processing(full_text)
-    
-    # 3. Chia nho theo ngu nghia (Semantic Chunking)
-    chunks = chunk_semantic(cleaned_text, embedding_model=embedding_model, max_chunk_size=CHUNK_SIZE)
-    
-    if not chunks:
+    chunker = SemanticChunk(
+        output_path="data/processed",
+        input_path="data/raw",
+    )
+    chunk_records = chunker.run(save_file=True)
+    source_name = os.path.basename(file_path)
+    chunk_records = [
+        chunk for chunk in chunk_records
+        if chunk["source"] == source_name
+    ]
+    if not chunk_records:
         raise ValueError("Tài liệu rỗng hoặc không trích xuất được chunk nào.")
-        
+
+    chunks = [chunk["text"] for chunk in chunk_records]
+
     # 4. Sinh vector embedding cho cac chunks moi
     doc_id = int(os.path.getmtime(file_path)) # dung timestamp lam ID doc nhat
-    embeddings = embedding_model.encode(chunks, show_progress_bar=False)
+    embeddings = embedding_model.encode(chunks, show_progress_bar=True)
     
     # 5. Khởi tạo VectorStore dựa trên Config
     if VECTOR_DB_TYPE.lower() == "chroma":
@@ -41,10 +44,13 @@ def process_and_add_document(file_path, embedding_model):
     metadata = [
         {
             "document_id": doc_id,
-            "source": os.path.basename(file_path),
-            "chunk_size": CHUNK_SIZE,
+            "source": chunk["source"],
+            "chunk_id": chunk["chunk_id"],
+            "max_chunk_size": MAX_CHUNK_SIZE,
+            "min_chunk_size": MIN_CHUNK_SIZE,
+            "model_name": MODEL_NAME,
         }
-        for _ in chunks
+        for chunk in chunk_records
     ]
     
     # 6. Thêm vào vector database

@@ -2,6 +2,9 @@ from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct
 import uuid
 import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
 
 class QdrantStore:
     def __init__(self, persist_directory: str = None, collection_name: str = "rag_collection", vector_size: int = 768):
@@ -48,7 +51,22 @@ class QdrantStore:
             points=points
         )
 
-    def search(self, query_embedding: np.ndarray, top_k: int = 5):
+    def get_collection_info(self) -> dict:
+        """
+        Trả về thông tin về collection: số lượng points, tên collection.
+        """
+        try:
+            info = self.client.get_collection(self.collection_name)
+            return {
+                "collection_name": self.collection_name,
+                "total_points": info.points_count,
+                "status": str(info.status),
+            }
+        except Exception as e:
+            logger.warning("Không thể lấy thông tin collection '%s': %s", self.collection_name, e)
+            return {"collection_name": self.collection_name, "total_points": 0, "status": "error"}
+
+    def search(self, query_embedding: np.ndarray, top_k: int = 5, score_threshold: float = 0.0):
         """
         Tìm kiếm theo vector similarity.
         """
@@ -60,7 +78,8 @@ class QdrantStore:
         search_result = self.client.query_points(
             collection_name=self.collection_name,
             query=vector,
-            limit=top_k
+            limit=top_k,
+            score_threshold=score_threshold
         )
 
         formatted_results = []
@@ -70,4 +89,9 @@ class QdrantStore:
                 "score": result.score,
                 "source": result.payload.get("source", "Unknown")
             })
+
+        logger.info(
+            "Qdrant search '%s': %d/%d results (threshold=%.2f)",
+            self.collection_name, len(formatted_results), top_k, score_threshold
+        )
         return formatted_results

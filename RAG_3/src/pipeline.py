@@ -3,6 +3,7 @@ from src.generation.generation import generate_answer
 from src.generation.prompt import prompt
 from config.Config import TOP_K, MODEL_NAME
 from src.embedding import load_embedding_model
+from src.ingestion import process_and_add_document
 import logging
 
 def rag_pipeline(query, embedding_model):
@@ -25,13 +26,13 @@ def rag_pipeline(query, embedding_model):
 
     return answer
 
-# if __name__ == "__main__":
-#     logging.basicConfig(
-#         filename = "logs/app.log",
-#         level=logging.INFO,
-#         format="%(asctime)s - %(levelname)s - %(message)s"
-#     )
-#     logging.info("="*20 + "Logging pipeline.py" + "="*20)
-#     query = "Server phân bổ tài nguyên như thế nào"
-#     embedding_model = load_embedding_model(MODEL_NAME)
-#     logging.info(rag_pipeline(query, embedding_model))
+if __name__ == "__main__":
+    logging.basicConfig(
+        filename = "logs/app.log",
+        level=logging.INFO,
+        format="%(asctime)s | %(levelname)s | %(message)s"
+    )
+    logging.info("="*20 + "Logging pipeline.py" + "="*20)
+    query = "Server phân bổ tài nguyên như thế nào"
+    embedding_model = load_embedding_model(MODEL_NAME)
+    logging.info(rag_pipeline(query, embedding_model))

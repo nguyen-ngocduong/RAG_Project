@@ -17,7 +17,7 @@ def process_and_add_document(file_path, embedding_model):
         output_path="data/processed",
         input_path="data/raw",
     )
-    chunk_records = chunker.run(save_file=True)
+    chunk_records = chunker.run(save_file=False)
     source_name = os.path.basename(file_path)
     chunk_records = [
         chunk for chunk in chunk_records
@@ -55,5 +55,5 @@ def process_and_add_document(file_path, embedding_model):
     
     # 6. Thêm vào vector database
     db.add_documents(chunks=chunks, embeddings=embeddings, metadata=metadata)
-        
+    print("Đã nạp xong dữ liệu, DONE!")
     return len(chunks)

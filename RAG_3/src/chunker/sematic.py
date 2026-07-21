@@ -290,8 +290,8 @@ class SemanticChunk:
                         "text": chunk_text,
                     }
                 )
-            for i in range(len(final_chunks)):
-                logging.info(f"Chunk_{i} - {final_chunks[i]}")
+            # for i in range(len(final_chunks)):
+            #     logging.info(f"Chunk_{i} - {final_chunks[i]}")
             print("DONE!")
             if save_file:
                 file_stem = Path(source_name).stem
